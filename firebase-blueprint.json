@@ -1,0 +1,43 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Public and private user profile details synchronized on sign-in.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "lastSignIn": { "type": "string" },
+        "saltLevel": { "type": "integer" },
+        "isSalted": { "type": "boolean" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Note": {
+      "title": "User Note",
+      "description": "User-authored notes created within the authenticated session.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "maxLength": 100 },
+        "content": { "type": "string", "maxLength": 2000 },
+        "createdAt": { "type": "string" },
+        "color": { "type": "string" }
+      },
+      "required": ["id", "userId", "content", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Information for each user."
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": "Note",
+      "description": "Personal notes for the user."
+    }
+  }
+}

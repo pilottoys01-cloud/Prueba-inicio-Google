@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper to check if user is signed in
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Helper to check if user is accessing their own data
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Validate ID pattern
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    // Validate user payload
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email'])
+        && data.keys().size() <= 7
+        && data.uid == request.auth.uid
+        && data.email is string
+        && (data.displayName == null || data.displayName is string)
+        && (data.photoURL == null || data.photoURL is string)
+        && (data.lastSignIn == null || data.lastSignIn is string)
+        && (data.saltLevel == null || data.saltLevel is int)
+        && (data.isSalted == null || data.isSalted is bool);
+    }
+    
+    // Validate note payload
+    function isValidNote(data, userId) {
+      return data.keys().hasAll(['id', 'userId', 'content', 'createdAt'])
+        && data.keys().size() <= 6
+        && data.id is string
+        && data.userId == userId
+        && data.content is string
+        && data.content.size() <= 2000
+        && (data.title == null || (data.title is string && data.title.size() <= 100))
+        && (data.color == null || data.color is string)
+        && data.createdAt is string;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidUser(request.resource.data);
+      allow delete: if isOwner(userId);
+      
+      match /notes/{noteId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(noteId) && isValidNote(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidId(noteId) && isValidNote(request.resource.data, userId)
+                      && request.resource.data.userId == resource.data.userId; // Prevent transferring ownership
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

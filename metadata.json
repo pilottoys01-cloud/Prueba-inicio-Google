@@ -1,0 +1,6 @@
+{
+  "name": "Google Sign-In App",
+  "description": "An application featuring Google Login using redirection instead of popups, preventing additional browser windows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
